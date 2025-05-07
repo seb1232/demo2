@@ -4,3 +4,4 @@ streamlit
 matplotlib
 msal
 requests
+plotly
