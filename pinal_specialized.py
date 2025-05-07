@@ -922,6 +922,79 @@ def render_sprint_task_planner():
                 # Load data
                 df = pd.read_csv(uploaded_file)
                 
+                # Detailed Analysis
+                st.subheader("Task Distribution Analysis")
+                
+                # Calculate statistics
+                total_tasks = len(df)
+                state_counts = df["State"].value_counts()
+                priority_counts = df["Priority"].value_counts()
+                category_counts = df["Category"].value_counts()
+                effort_counts = df["Original Estimates"].value_counts().sort_index()
+                total_hours = df["Original Estimates"].sum()
+
+                # Create analysis sections with Apple-style cards
+                st.markdown("""
+                <div class="apple-card" style='background: linear-gradient(135deg, rgba(30, 136, 229, 0.8), rgba(0, 100, 255, 0.9)); padding: 20px; border-radius: 15px; margin-bottom: 25px; color: white;'>
+                    <h3>Task Distribution</h3>
+                    <p>Total Tasks: {}</p>
+                    <p>States: {}</p>
+                </div>
+                """.format(
+                    total_tasks,
+                    ", ".join([f"{k}: {v} tasks" for k, v in state_counts.items()])
+                ), unsafe_allow_html=True)
+
+                # Priority Breakdown
+                st.markdown("""
+                <div class="apple-card" style='background: linear-gradient(135deg, rgba(76, 175, 80, 0.8), rgba(0, 150, 0, 0.9)); padding: 20px; border-radius: 15px; margin-bottom: 25px; color: white;'>
+                    <h3>Priority Breakdown</h3>
+                    {}
+                </div>
+                """.format(
+                    "<br>".join([f"{k}: {v} tasks ({v/total_tasks*100:.1f}%)" for k, v in priority_counts.items()])
+                ), unsafe_allow_html=True)
+
+                # Category Distribution
+                st.markdown("""
+                <div class="apple-card" style='background: linear-gradient(135deg, rgba(156, 39, 176, 0.8), rgba(100, 0, 150, 0.9)); padding: 20px; border-radius: 15px; margin-bottom: 25px; color: white;'>
+                    <h3>Category Distribution</h3>
+                    {}
+                </div>
+                """.format(
+                    "<br>".join([f"{k}: {v} tasks" for k, v in category_counts.items()])
+                ), unsafe_allow_html=True)
+
+                # Effort Estimates
+                st.markdown("""
+                <div class="apple-card" style='background: linear-gradient(135deg, rgba(255, 152, 0, 0.8), rgba(200, 100, 0, 0.9)); padding: 20px; border-radius: 15px; margin-bottom: 25px; color: white;'>
+                    <h3>Effort Estimates</h3>
+                    {}
+                    <p>Total estimated hours: {:.0f}</p>
+                </div>
+                """.format(
+                    "<br>".join([f"{k:.0f} hours: {v} tasks" for k, v in effort_counts.items()]),
+                    total_hours
+                ), unsafe_allow_html=True)
+
+                # Key Components Analysis
+                components = {
+                    "Security": df[df["Title"].str.contains("Security", na=False)].shape[0],
+                    "Workflow": df[df["Title"].str.contains("Workflow|LCM", na=False)].shape[0],
+                    "UI/Display": df[df["Title"].str.contains("UI|Display|Dialog", na=False)].shape[0],
+                    "System": df[df["Title"].str.contains("System|Performance|Server", na=False)].shape[0],
+                    "Service": df[df["Title"].str.contains("Service|RTC|LCM", na=False)].shape[0]
+                }
+
+                st.markdown("""
+                <div class="apple-card" style='background: linear-gradient(135deg, rgba(233, 30, 99, 0.8), rgba(150, 0, 50, 0.9)); padding: 20px; border-radius: 15px; margin-bottom: 25px; color: white;'>
+                    <h3>Key Components</h3>
+                    {}
+                </div>
+                """.format(
+                    "<br>".join([f"{k}: {v} tasks" for k, v in components.items() if v > 0])
+                ), unsafe_allow_html=True)
+
                 # Preview data
                 st.subheader("Data Preview")
                 st.dataframe(df.head(10), use_container_width=True)
