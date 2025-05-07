@@ -1413,8 +1413,7 @@ def render_sprint_task_planner():
         if st.session_state.results is None:
             st.warning("No assignment results available. Please run the assignment algorithm first.")
         else:
-            results = st.session_state
-.results
+            results = st.session_state.results
             df = results["df"]
             assigned_hours = results["assigned_hours"]
             assigned_priorities = results["assigned_priorities"]
