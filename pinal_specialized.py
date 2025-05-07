@@ -2133,10 +2133,10 @@ def render_sprint_task_planner():
         df["Assigned To"] = df["Assigned To"].fillna("").str.strip()
         df["Mismatch"] = df.apply(Type,Description,Votes
         Went Well,The team was collaborative,5
-        Needs Improvement,Documentation is lacking,3
+        Needs Improvement,Documentation is lacking,3)
         ```
 
         The tool will also recognize associated tasks when formatted as:
         ```
         Feedback Description,Work Item Title,Work Item Type,Work Item Id,
-        Documentation is lacking,Improve Docs,Task,12345)
+        Documentation is lacking,Improve Docs,Task,12345
