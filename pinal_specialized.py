@@ -2110,7 +2110,8 @@ def render_sprint_task_planner():
                     full_response = ""
 
                     headers = {
-                        "AuthorizationType,Description,Votes
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json"
         Went Well,The team was collaborative,5
         Needs Improvement,Documentation is lacking,3
         ```
