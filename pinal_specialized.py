@@ -26,7 +26,6 @@ st.markdown("""
     /* Include Apple-style animations */
     @import url('app/assets/apple_style.css');
     
-
     /* Base styling */
     .main {
         background-color:  #0e1117 ;
@@ -107,7 +106,7 @@ st.markdown("""
             transform: translateY(0) translateX(0);
         }
     }
-
+    
     @keyframes fadeInUp {
         from {
             transform: translateY(40px);
@@ -118,7 +117,7 @@ st.markdown("""
             opacity: 1;
         }
     }
-
+    
     @keyframes gradientBG {
         0% {
             background-position: 0% 50%;
@@ -130,7 +129,7 @@ st.markdown("""
             background-position: 0% 50%;
         }
     }
-
+    
     @keyframes pulse {
         0% {
             transform: scale(1);
@@ -243,7 +242,6 @@ st.markdown("""
         }
     }
 </style>
-
 <script>
 // Helper functions for Apple-style animations
 document.addEventListener("DOMContentLoaded", function() {
@@ -313,7 +311,6 @@ if "df_tasks" not in st.session_state:
     st.session_state.df_tasks = None
 if "team_members" not in st.session_state:
     st.session_state.team_members = {}
-# team_members will be a dict like {"Alice": {"capacity": 40, "specialization": "Backend"}}
 if "results" not in st.session_state:
     st.session_state.results = None
 if "capacity_per_sprint" not in st.session_state:
@@ -499,8 +496,24 @@ def optimize_sprint_assignment(tasks_df, team_members, capacity_per_sprint, max_
         }
     
     # Clone team members with their capacity
-    available_capacity = {member: float(capacity) for member, capacity in team_members.items()}
+    available_capacity = {member: float(team_members[member]['capacity']) for member in team_members}
     
+    # Extract component/category from task titles or descriptions
+    df['Category'] = df['Title'].str.extract(r'^\[([^\]]+)\]', expand=False)
+
+    # Prioritize assignments based on specialization
+    for member, info in team_members.items():
+        member_specialization = info['specialization']
+        matching_tasks = df[df['Category'].str.lower() == member_specialization.lower()]
+
+        # Assign matching tasks first
+        for _, task in matching_tasks.iterrows():
+            if task['Assigned To'] == '':  # Only if not already assigned
+                # Check capacity constraints
+                if info['capacity'] >= task['Original Estimates']:
+                    df.loc[task.name, 'Assigned To'] = member
+                    info['capacity'] -= task['Original Estimates']
+
     # Try to assign tasks based on priority, estimate, and available capacity
     for idx, row in df.iterrows():
         task_id = row['ID']
@@ -575,14 +588,14 @@ def optimize_sprint_assignment(tasks_df, team_members, capacity_per_sprint, max_
         }
     
     # Compile team member summaries
-    total_team_capacity = sum(team_members.values())
+    total_team_capacity = sum(team_members[member]['capacity'] for member in team_members)
     used_capacity = total_team_capacity - sum(available_capacity.values())
     
-    for member, capacity in team_members.items():
+    for member, info in team_members.items():
         results['team_member_summary'][member] = {
-            'initial_capacity': capacity,
+            'initial_capacity': info['capacity'],
             'remaining_capacity': available_capacity[member],
-            'utilization': (capacity - available_capacity[member]) / capacity if capacity > 0 else 0
+            'utilization': (info['capacity'] - available_capacity[member]) / info['capacity'] if info['capacity'] > 0 else 0
         }
     
     # Add overall statistics
@@ -614,7 +627,7 @@ def compare_retrospectives(file_objects, min_votes, max_votes):
     feedback_counts = {}
     feedback_tasks = {}  # Dictionary to store associated task numbers
     processing_results = []
-
+    
     for uploaded_file in file_objects:
         try:
             # Convert to string content
@@ -960,25 +973,19 @@ def render_sprint_task_planner():
         with col1:
             # Add new team member
             with st.form("add_member_form"):
-    st.subheader("Add Team Member")
-
-    new_member_name = st.text_input("Name")
-    new_member_capacity = st.number_input("Capacity (hours)", min_value=1, value=40)
-    new_member_specialization = st.text_input("Specialization (e.g., Frontend, Backend, QA)", "")
-
-    submitted = st.form_submit_button("Add Team Member")
-    if submitted and new_member_name:
-        st.session_state.team_members[new_member_name] = {
-            "capacity": new_member_capacity,
-            "specialization": new_member_specialization or "General"
-        }
-        st.success(f"Added {new_member_name} with {new_member_capacity}h capacity ({new_member_specialization or 'General'})")
+                st.subheader("Add Team Member")
+                
+                new_member_name = st.text_input("Name")
+                new_member_capacity = st.number_input("Capacity (hours)", min_value=1, value=40)
+                new_member_specialization = st.text_input("Specialization (e.g., Frontend, Backend, QA)", "General")
+                
+                submitted = st.form_submit_button("Add Team Member")
                 if submitted and new_member_name:
-    st.session_state.team_members[new_member_name] = {
-        "capacity": new_member_capacity,
-        "specialization": new_member_specialization or "General"
-    }
-                    st.success(f"Added {new_member_name} with {new_member_capacity} hours capacity")
+                    st.session_state.team_members[new_member_name] = {
+                        "capacity": new_member_capacity,
+                        "specialization": new_member_specialization
+                    }
+                    st.success(f"Added {new_member_name} with {new_member_capacity}h capacity ({new_member_specialization})")
         
         with col2:
             # Quick add multiple team members
@@ -993,23 +1000,19 @@ def render_sprint_task_planner():
                 
                 submitted = st.form_submit_button("Add Multiple Members")
                 if submitted and multiple_members:
-    lines = multiple_members.strip().split("\n")
-    for line in lines:
-                        if "," in line:
-    parts = [part.strip() for part in line.split(",")]
-    if len(parts) == 2:
-        name, capacity = parts
-        specialization = "General"
-    elif len(parts) >= 3:
-        name, capacity, specialization = parts[0], parts[1], parts[2]
-    else:
-        continue
+                    lines = multiple_members.strip().split('\n')
+                    for line in lines:
+                        if ',' in line:
+                            name, capacity = line.split(',', 1)
                             name = name.strip()
                             
                             try:
                                 capacity = float(capacity.strip())
                                 if name and capacity > 0:
-                                    st.session_state.team_members[name] = {"capacity": capacity, "specialization": specialization}
+                                    st.session_state.team_members[name] = {
+                                        "capacity": capacity,
+                                        "specialization": "General"
+                                    }
                             except ValueError:
                                 st.error(f"Invalid capacity for {name}. Skipping.")
                     
@@ -1022,8 +1025,8 @@ def render_sprint_task_planner():
             # Create a DataFrame to display
             team_df = pd.DataFrame({
                 "Name": list(st.session_state.team_members.keys()),
-"Capacity (hours)": [v["capacity"] for v in st.session_state.team_members.values()],
-"Specialization": [v["specialization"] for v in st.session_state.team_members.values()]
+                "Capacity (hours)": [st.session_state.team_members[m]["capacity"] for m in st.session_state.team_members],
+                "Specialization": [st.session_state.team_members[m]["specialization"] for m in st.session_state.team_members]
             })
             
             # Display team table
@@ -1039,7 +1042,6 @@ def render_sprint_task_planner():
             # Clear all members
             if st.button("Clear All Members"):
                 st.session_state.team_members = {}
-# team_members will be a dict like {"Alice": {"capacity": 40, "specialization": "Backend"}}
                 st.success("Team cleared")
                 st.rerun()
         else:
@@ -1130,13 +1132,12 @@ def render_sprint_task_planner():
                     value=False,
                     help="When enabled, members will be assigned tasks from their specialized categories when possible"
                 )
-                
+            
             # Assignment button
             if st.button("Run Assignment", type="primary", use_container_width=True):
                 # Get the data
                 df = st.session_state.df_tasks.copy()
-                team_members = {name: info["capacity"] for name, info in st.session_state.team_members.items()}
-specializations = {name: info["specialization"] for name, info in st.session_state.team_members.items()}
+                team_members = st.session_state.team_members
                 
                 # Check for required columns
                 required_columns = ["Priority", "Original Estimates"]
@@ -1220,7 +1221,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                             # Base capacity + any remaining capacity from previous sprint
                             for member, full_capacity in team_members.items():
                                 # Calculate what percentage of full time this person is
-                                capacity_percentage = full_capacity / (num_sprints * st.session_state.capacity_per_sprint)
+                                capacity_percentage = full_capacity["capacity"] / (num_sprints * st.session_state.capacity_per_sprint)
                                 # Capacity for this sprint is the percentage of the sprint's total hours + remaining from previous
                                 members_sprint_capacity[member] = (capacity_percentage * st.session_state.capacity_per_sprint) + remaining_capacity[member]
                             
@@ -1354,13 +1355,6 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                                     
                                     # Try to assign to the best-fit member with capacity
                                     for member in shuffled_members:
-    # Prefer if specialization matches task category
-    if "Category" in task and str(task["Category"]).lower() == specializations[member].lower():
-        bonus = 0
-    else:
-        bonus = 10  # deprioritize
-    if members_sprint_capacity[member] + bonus < estimate:
-        continue
                                         if members_sprint_capacity[member] <= 0:
                                             continue
                                             
@@ -1400,7 +1394,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                             "df": df,
                             "assigned_hours": assigned_hours,
                             "assigned_priorities": assigned_priorities,
-                            "team_members": team_members,
+                            "team_members":team_members,
                             "sprint_data": {
                                 "sprint_assignments": sprint_assignments,
                                 "sprint_capacities": sprint_capacities,
@@ -1426,7 +1420,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
             st.subheader("Summary")
             
             total_assigned = sum(assigned_hours.values())
-            total_capacity = sum(team_members.values())
+            total_capacity = sum(team_members[m]["capacity"] for m in team_members)
             percent_utilized = (total_assigned / total_capacity * 100) if total_capacity > 0 else 0
             
             col1, col2, col3 = st.columns(3)
@@ -1439,7 +1433,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                 
             with col3:
                 st.metric("Capacity Utilized", f"{percent_utilized:.1f}%")
-                
+            
             # Detailed results
             st.subheader("Assigned Tasks")
             st.dataframe(
@@ -1465,6 +1459,11 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                         help="Sprint assignment",
                         width="medium",
                     ),
+                    "Category": st.column_config.Column(
+                        "Category",
+                        help="Task Category",
+                        width="medium"
+                    )
                 },
                 use_container_width=True
             )
@@ -1474,7 +1473,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
             
             # Prepare data for visualization
             members = list(team_members.keys())
-            capacities = [team_members[m] for m in members]
+            capacities = [team_members[m]["capacity"] for m in members]
             used_capacities = [assigned_hours[m] for m in members]
             remaining_capacities = [capacities[i] - used_capacities[i] for i in range(len(members))]
             
@@ -1632,7 +1631,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                         
                         with col3:
                             # Calculate how much capacity was utilized in this sprint
-                            total_sprint_capacity = sum([team_members[m] / num_sprints for m in team_members])
+                            total_sprint_capacity = sum([team_members[m]["capacity"]/ num_sprints for m in team_members])
                             sprint_percent = (sprint_hours / total_sprint_capacity * 100) if total_sprint_capacity > 0 else 0
                             st.metric("Sprint Capacity Used", f"{sprint_percent:.1f}%")
                         
@@ -1655,6 +1654,11 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                                     "Assigned To",
                                     help="Team member assigned to the task",
                                     width="medium"
+                                ),
+                                "Category": st.column_config.Column(
+                                    "Category",
+                                    help="Task Category",
+                                    width="medium"
                                 )
                             },
                             use_container_width=True
@@ -1672,7 +1676,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                         if i > 0:
                             prev_sprint = f"Sprint {i}"
                             for m in members:
-                                member_capacity = team_members[m] / num_sprints  # Base capacity per sprint
+                                member_capacity = team_members[m]["capacity"] / num_sprints  # Base capacity per sprint
                                 used_in_prev = sprint_capacities[prev_sprint].get(m, 0)
                                 carried = max(0, member_capacity - used_in_prev)
                                 carried_over.append(carried)
@@ -1686,7 +1690,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                         x = np.arange(len(members))
                         
                         # Member's standard capacity for this sprint
-                        standard_capacity = [team_members[m] / num_sprints for m in members]
+                        standard_capacity = [team_members[m]["capacity"] / num_sprints for m in members]
                         
                         # Visualize standard capacity, carried over capacity, and used capacity
                         ax.bar(x, standard_capacity, bar_width, label='Standard Capacity', color='#455a64', alpha=0.6)
@@ -1834,11 +1838,8 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                 
             with col2:
                 st.markdown(get_download_link(df, "Task_Assignments.csv", "csv"), unsafe_allow_html=True)
-
-    
-    
-    
-    
+            
+            render_specialization_analysis()
     
     # 5. AZURE DEVOPS INTEGRATION TAB
     with azure_tab:
@@ -1981,44 +1982,44 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
         else:
             st.info("Connect to Azure DevOps to import tasks or update assignments")
     ai_tab = st.tabs(["6. AI Suggestions"])[0]
-
+    
     with ai_tab:
         st.header("AI Suggestions and Insights")
         st.markdown("Powered by OpenRouter + OpenAI")
-
+        
         if "ai_messages" not in st.session_state:
             st.session_state.ai_messages = [
                 {"role": "assistant", "content": "Hello! I'm your sprint planning assistant. How can I help you with your task assignments today?"}
             ]
-
+        
         for message in st.session_state.ai_messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
-
+        
         api_key = st.text_input("OpenRouter API Key", type="password", key="ai_api_key")
-
+        
         if st.session_state.df_tasks is None:
             st.info("Please upload task data in the Upload Tasks tab first.")
             st.stop()
-
+        
         df = st.session_state.df_tasks.copy()
-
+        
         # 🔍 Extract component expertise from the task file
         expertise_col_member = "Unnamed: 15"
         expertise_col_comp = "Unnamed: 16"
         component_col = None
-
+        
         if expertise_col_member in df.columns and expertise_col_comp in df.columns:
             expertise_map = df[[expertise_col_member, expertise_col_comp]].dropna()
             expertise_map.columns = ["Member", "Expertise"]
             expertise_dict = expertise_map.set_index("Member")["Expertise"].to_dict()
         else:
             expertise_dict = {}
-
+        
         # 📦 Extract component name from Title (e.g., "Comp1: something")
         if "Title" in df.columns:
             df["Component"] = df["Title"].str.extract(r"(Comp\d+)", expand=False)
-
+        
         # 🧠 Analyze mismatches
         df["Assigned To"] = df["Assigned To"].fillna("").str.strip()
         df["Mismatch"] = df.apply(
@@ -2030,15 +2031,15 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
             axis=1
         )
         mismatches = df[df["Mismatch"]]
-
+        
         # 📬 User input
         prompt = st.chat_input("Ask about your sprint plan or say 'fix component mismatches'...")
-
+        
         if prompt:
             st.session_state.ai_messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
-
+            
             # If user wants to fix mismatches
             if "fix" in prompt.lower() and "mismatch" in prompt.lower():
                 with st.chat_message("assistant"):
@@ -2049,43 +2050,42 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                         if correct_member:
                             df.at[idx, "Assigned To"] = correct_member
                             reassigned += 1
-
+                    
                     st.success(f"Reassigned {reassigned} mismatched tasks.")
                     st.dataframe(df[["ID", "Title", "Component", "Assigned To"]], use_container_width=True)
-
+                    
                     st.session_state.df_tasks = df  # Save back corrected
-
+                    
                     st.session_state.ai_messages.append({
                         "role": "assistant",
                         "content": f"I found and reassigned {reassigned} tasks to match component expertise."
                     })
-
+            
             else:
                 # 🧠 AI Context
                 context = f"""You are an expert sprint planning assistant.
-
+                
     There are {len(df)} tasks. Component expertise is as follows:\n"""
                 for m, c in expertise_dict.items():
                     context += f"- {m} specializes in {c}\n"
-
+                
                 if not mismatches.empty:
                     context += "\n⚠️ Detected mismatches:\n"
                     for _, row in mismatches.iterrows():
                         context += f"- Task '{row['Title']}' assigned to {row['Assigned To']} but it's {row['Component']}\n"
-
+                
                 context += f"\nUser prompt: {prompt}"
-
+                
                 # 🔁 Stream response from OpenRouter
                 with st.chat_message("assistant"):
                     message_placeholder = st.empty()
                     full_response = ""
-
-                    headers = {
+headers = {
                         "Authorization": f"Bearer {api_key}",
                         "HTTP-Referer": "https://localhost",
                         "Content-Type": "application/json"
                     }
-
+                    
                     body = {
                         "model": "openai/gpt-3.5-turbo",
                         "messages": [{"role": "system", "content": context}] +
@@ -2094,7 +2094,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                         "max_tokens": 1500,
                         "stream": True
                     }
-
+                    
                     try:
                         with requests.post(
                             "https://openrouter.ai/api/v1/chat/completions",
@@ -2120,7 +2120,7 @@ specializations = {name: info["specialization"] for name, info in st.session_sta
                                 full_response = f"Error: {response.status_code} - {response.text}"
                     except Exception as e:
                         full_response = f"An error occurred: {str(e)}"
-
+                    
                     message_placeholder.markdown(full_response)
                     st.session_state.ai_messages.append({"role": "assistant", "content": full_response})
 
@@ -2293,47 +2293,47 @@ def render_retrospective_analysis():
     with ai_tab:
         st.header("AI Suggestions & Insights")
         st.markdown("Powered by OpenRouter + OpenAI")
-
+        
         if "ai_messages" not in st.session_state:
             st.session_state.ai_messages = [
                 {"role": "assistant", "content": "Hi! I'm your SPrint assistant. How can I help?"}
             ]
-
+        
         for msg in st.session_state.ai_messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
-
+        
         api_key = st.text_input("🔑 OpenRouter API Key", type="password", key="ai_api_key")
-
+        
         if "retro_feedback" not in st.session_state or st.session_state.retro_feedback is None:
             st.info("Analyze retrospectives first in the previous tab.")
             st.stop()
-
+        
         df = create_dataframe_from_results(st.session_state.retro_feedback)
-
+        
         # Build context from feedback
         context = "You are a helpful assistant summarizing retrospective feedback:\\n"
         for _, row in df.iterrows():
             task_info = f" [Task ID: {row['Task ID']}]" if row['Task ID'] != "None" else ""
             context += f"- {row['Feedback']} ({row['Votes']} votes){task_info}\\n"
-
+        
         prompt = st.chat_input("Ask me anything about this retrospective...")
-
+        
         if prompt:
             st.session_state.ai_messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
-
+            
             with st.chat_message("assistant"):
                 msg_placeholder = st.empty()
                 full_response = ""
-
+                
                 headers = {
                     "Authorization": f"Bearer {api_key}",
                     "HTTP-Referer": "https://localhost",
                     "Content-Type": "application/json"
                 }
-
+                
                 body = {
                     "model": "openai/gpt-3.5-turbo",
                     "messages": [{"role": "system", "content": context}] +
@@ -2342,7 +2342,7 @@ def render_retrospective_analysis():
                     "max_tokens": 1500,
                     "stream": True
                 }
-
+                
                 try:
                     with requests.post("https://openrouter.ai/api/v1/chat/completions",
                                     headers=headers, json=body, stream=True) as response:
@@ -2363,7 +2363,7 @@ def render_retrospective_analysis():
                             full_response = f"Error: {response.status_code} - {response.text}"
                 except Exception as e:
                     full_response = f"Error: {e}"
-
+                
                 msg_placeholder.markdown(full_response)
                 st.session_state.ai_messages.append({"role": "assistant", "content": full_response})
 #Main Navigation
@@ -2372,25 +2372,42 @@ st.sidebar.title("Navigation")
 # Add navigation options with simple buttons
 st.sidebar.markdown("### Choose a section:")
 
-if st.sidebar.button("🏠 Home", key="nav_home", use_container_width=True, 
-                     type="primary" if st.session_state.current_app == "home" else "secondary"):
-    st.session_state.current_app = "home"
-    st.rerun()
+app_mode = st.sidebar.selectbox("Choose the app mode",
+    ["Home", "Sprint Task Planner", "Retrospective Analysis"])
 
-if st.sidebar.button("📝 Sprint Task Planner", key="nav_sprint", use_container_width=True,
-                    type="primary" if st.session_state.current_app == "sprint_planner" else "secondary"):
-    st.session_state.current_app = "sprint_planner"
-    st.rerun()
-
-if st.sidebar.button("📊 Retrospective Analysis", key="nav_retro", use_container_width=True,
-                    type="primary" if st.session_state.current_app == "retro_analysis" else "secondary"):
-    st.session_state.current_app = "retro_analysis"
-    st.rerun()
-
-# Render the selected app
-if st.session_state.current_app == "home":
+if app_mode == "Home":
     render_home()
-elif st.session_state.current_app == "sprint_planner":
+elif app_mode == "Sprint Task Planner":
     render_sprint_task_planner()
-elif st.session_state.current_app == "retro_analysis":
+elif app_mode == "Retrospective Analysis":
     render_retrospective_analysis()
+
+def render_specialization_analysis():
+    if not st.session_state.results:
+        return
+
+    st.subheader("Specialization Analysis")
+
+    # Create DataFrame of assignments by specialization
+    spec_data = []
+    for member, info in st.session_state.team_members.items():
+        member_tasks = df[df['Assigned To'] == member]
+        matching_spec = member_tasks[member_tasks['Category'].str.lower() == info['specialization'].lower()].shape[0]
+        total_tasks = member_tasks.shape[0]
+
+        spec_data.append({
+            'Member': member,
+            'Specialization': info['specialization'],
+            'Matching Tasks': matching_spec,
+            'Other Tasks': total_tasks - matching_spec
+        })
+
+    spec_df = pd.DataFrame(spec_data)
+
+    # Create visualization
+    fig = px.bar(spec_df, x='Member', y=['Matching Tasks', 'Other Tasks'],
+                 title='Task Assignment by Specialization',
+                 labels={'value': 'Number of Tasks', 'variable': 'Task Type'},
+                 color_discrete_map={'Matching Tasks': '#4CAF50', 'Other Tasks': '#FFA726'})
+
+    st.plotly_chart(fig)
