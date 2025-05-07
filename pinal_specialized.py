@@ -767,6 +767,7 @@ def render_home():
     st.markdown("""
     <div class="apple-card" style='background-color: rgba(130, 133, 48, 0.7); padding: 30px; border-radius: 20px; margin: 40px 0 30px 0; backdrop-filter: blur(15px); animation: fadeInUp 0.8s ease-out;'>
         <h2 style="margin-bottom: 20px; font-size: 28px; font-weight: 500;">All-in-One Tool for Agile Teams</h2>
+        ```python
         <p style="margin-bottom: 20px; font-size: 18pxline-height: 1.6;">This integrated application provides comprehensive tools for managing agile projects with a beautiful, intuitive interface:</p>
         <ul class="staggered-fade" style="padding-left: 20px;">
             <li style="margin-bottom: 12px; font-size: 16px;"><strong>Sprint Task Planning:</strong> Optimize task assignment across sprints and team members</li>
@@ -1250,19 +1251,24 @@ def render_sprint_task_planner():
                                 def get_specialization_score(member, task):
                                     # Convert everything to lowercase for matching
                                     member_lower = member.lower()
+                                    
 
                                     # Check title for component matches
                                     title_match = 1 if task["Title"].lower().find(member_lower) != -1 else 0
+                                    
 
                                     # Check category matches
                                     category_match = 1 if task["Category"].lower().find(member_lower) != -1 else 0
+                                    
 
                                     # Check if member name matches components like Comp1, Comp2
                                     comp_match = 0
                                     if "Component" in task and task["Component"]:
                                         comp_match = 1 if task["Component"].lower().find(member_lower) != -1 else 0
+                                    
 
                                     return title_match + category_match + comp_match
+                                
 
                                 # Sort members by specialization match, priority balance, and capacity
                                 members_sorted = sorted(
@@ -1407,7 +1413,8 @@ def render_sprint_task_planner():
         if st.session_state.results is None:
             st.warning("No assignment results available. Please run the assignment algorithm first.")
         else:
-            results = st.session_state.results
+            results = st.session_state```python
+.results
             df = results["df"]
             assigned_hours = results["assigned_hours"]
             assigned_priorities = results["assigned_priorities"]
@@ -1825,12 +1832,8 @@ def render_sprint_task_planner():
                 
             with col2:
                 st.markdown(get_download_link(df, "Task_Assignments.csv", "csv"), unsafe_allow_html=True)
+    
 
-    
-    
-    
-    
-    
     # 5. AZURE DEVOPS INTEGRATION TAB
     with azure_tab:
         st.header("Azure DevOps Integration")
@@ -1972,44 +1975,44 @@ def render_sprint_task_planner():
         else:
             st.info("Connect to Azure DevOps to import tasks or update assignments")
     ai_tab = st.tabs(["6. AI Suggestions"])[0]
-
+    
     with ai_tab:
         st.header("AI Suggestions and Insights")
         st.markdown("Powered by OpenRouter + OpenAI")
-
+        
         if "ai_messages" not in st.session_state:
             st.session_state.ai_messages = [
                 {"role": "assistant", "content": "Hello! I'm your sprint planning assistant. How can I help you with your task assignments today?"}
             ]
-
+        
         for message in st.session_state.ai_messages:
             with st.chat_message(message["role"]):
                 st.markdown(message["content"])
-
+        
         api_key = st.text_input("OpenRouter API Key", type="password", key="ai_api_key")
-
+        
         if st.session_state.df_tasks is None:
             st.info("Please upload task data in the Upload Tasks tab first.")
             st.stop()
-
+        
         df = st.session_state.df_tasks.copy()
-
+        
         # 🔍 Extract component expertise from the task file
         expertise_col_member = "Unnamed: 15"
         expertise_col_comp = "Unnamed: 16"
         component_col = None
-
+        
         if expertise_col_member in df.columns and expertise_col_comp in df.columns:
             expertise_map = df[[expertise_col_member, expertise_col_comp]].dropna()
             expertise_map.columns = ["Member", "Expertise"]
             expertise_dict = expertise_map.set_index("Member")["Expertise"].to_dict()
         else:
             expertise_dict = {}
-
+        
         # 📦 Extract component name from Title (e.g., "Comp1: something")
         if "Title" in df.columns:
             df["Component"] = df["Title"].str.extract(r"(Comp\d+)", expand=False)
-
+        
         # 🧠 Analyze mismatches
         df["Assigned To"] = df["Assigned To"].fillna("").str.strip()
         df["Mismatch"] = df.apply(
@@ -2021,15 +2024,15 @@ def render_sprint_task_planner():
             axis=1
         )
         mismatches = df[df["Mismatch"]]
-
+        
         # 📬 User input
         prompt = st.chat_input("Ask about your sprint plan or say 'fix component mismatches'...")
-
+        
         if prompt:
             st.session_state.ai_messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"):
                 st.markdown(prompt)
-
+            
             # If user wants to fix mismatches
             if "fix" in prompt.lower() and "mismatch" in prompt.lower():
                 with st.chat_message("assistant"):
@@ -2040,51 +2043,54 @@ def render_sprint_task_planner():
                         if correct_member:
                             df.at[idx, "Assigned To"] = correct_member
                             reassigned += 1
-
+                    
                     st.success(f"Reassigned {reassigned} mismatched tasks.")
                     st.dataframe(df[["ID", "Title", "Component", "Assigned To"]], use_container_width=True)
-
+                    
                     st.session_state.df_tasks = df  # Save back corrected
-
+                    
                     st.session_state.ai_messages.append({
                         "role": "assistant",
                         "content": f"I found and reassigned {reassigned} tasks to match component expertise."
                     })
-
+            
             else:
                 # 🧠 AI Context
                 context = f"""You are an expert sprint planning assistant.
-
+                
     There are {len(df)} tasks. Component expertise is as follows:\n"""
                 for m, c in expertise_dict.items():
                     context += f"- {m} specializes in {c}\n"
-
+                
                 if not mismatches.empty:
                     context += "\n⚠️ Detected mismatches:\n"
                     for _, row in mismatches.iterrows():
                         context += f"- Task '{row['Title']}' assigned to {row['Assigned To']} but it's {row['Component']}\n"
-
+                
                 context += f"\nUser prompt: {prompt}"
-
+                
                 # 🔁 Stream response from OpenRouter
                 with st.chat_message("assistant"):
                     message_placeholder = st.empty()
                     full_response = ""
+                    
 
                     headers = {
                         "Authorization": f"Bearer {api_key}",
                         "HTTP-Referer": "https://localhost",
                         "Content-Type": "application/json"
                     }
+                    
 
                     body = {
                         "model": "openai/gpt-3.5-turbo",
                         "messages": [{"role": "system", "content": context}] +
-                                    [msg for msg in st.session_state.ai_messages if msg["role"] != "assistant"],
+                                        [msg for msg in st.session_state.ai_messages if msg["role"] != "assistant"],
                         "temperature": 0.7,
                         "max_tokens": 1500,
                         "stream": True
                     }
+                    
 
                     try:
                         with requests.post(
@@ -2103,12 +2109,28 @@ def render_sprint_task_planner():
                                                 if "choices" in data and data["choices"]:
                                                     delta = data["choices"][0].get("delta", {})
                                                     if "content" in delta:
-                                                        full_Type,Description,Votes
-        Went Well,The team was collaborative,5
-        Needs Improvement,Documentation is lacking,3
-        ```
-        
-        The tool will also recognize associated tasks when formatted as:
-        ```
-        Feedback Description,Work Item Title,Work Item Type,Work Item Id,
-        Documentation is lacking,Improve Docs,Task,12345
+                                                        full_response += delta["content"]
+                                                        message_placeholder.markdown(full_response)
+                                            except json.JSONDecodeError:
+                                                pass
+                            else:
+                                st.error(f"OpenRouter API request failed with status code: {response.status_code}")
+                                full_response = f"OpenRouter API request failed with status code: {response.status_code}"
+                                message_placeholder.markdown(full_response)
+                    except requests.exceptions.RequestException as e:
+                        st.error(f"Error connecting to OpenRouter API: {str(e)}")
+                        full_response = f"Error connecting to OpenRouter API: {str(e)}"
+                        message_placeholder.markdown(full_response)
+                    
+                    st.session_state.ai_messages.append({"role": "assistant", "content": full_response})
+
+if __name__ == "__main__":
+    if "current_app" not in st.session_state:
+        st.session_state.current_app = "home"
+
+    if st.session_state.current_app == "home":
+        render_home()
+    elif st.session_state.current_app == "sprint_planner":
+        render_sprint_task_planner()
+    elif st.session_state.current_app == "retro_analysis":
+        render_retrospective_analysis()
