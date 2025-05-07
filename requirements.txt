@@ -1,0 +1,6 @@
+pandas
+openpyxl
+streamlit
+matplotlib
+msal
+requests
