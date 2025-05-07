@@ -2114,7 +2114,4 @@ def render_sprint_task_planner():
                         "Content-Type": "application/json"
                     }
                     
-                    # The tool will also recognize associated tasks when formatted as:
-        ```
-        Feedback Description,Work Item Title,Work Item Type,Work Item Id,
-        Documentation is lacking,Improve Docs,Task,12345
+                   
