@@ -2113,9 +2113,8 @@ def render_sprint_task_planner():
                         "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json"
                     }
-        ```
-        
-        The tool will also recognize associated tasks when formatted as:
+                    
+                    # The tool will also recognize associated tasks when formatted as:
         ```
         Feedback Description,Work Item Title,Work Item Type,Work Item Id,
         Documentation is lacking,Improve Docs,Task,12345
