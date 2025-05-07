@@ -463,7 +463,39 @@ def update_azure_devops_tasks(org_url, project, access_token, updates):
     
     return results
 
-def optimize_sprint_assignment(tasks_df, team_members, capacity_per_sprint, max_sprints=3, specialisation_field="None"):
+def optimize_sprint_assignment(tasks_df, team_members, capacity_per_sprint, max_sprints=3):
+    """Optimize task assignment across sprints and team members based on expertise"""
+    # Create a copy of the DataFrame to work with
+    df = tasks_df.copy()
+    
+    # Convert priority to numeric values (higher is more important)
+    priority_map = {'high': 3, 'medium': 2, 'low': 1}
+    df['Priority_Value'] = df['Priority'].str.lower().map(priority_map).fillna(1)
+    
+    # Sort tasks by priority (high to low)
+    df = df.sort_values('Priority_Value', ascending=False)
+    
+    # Extract component from title
+    df['Component'] = df['Title'].str.extract(r'(Comp\d+)', expand=False)
+    
+    # Initialize results structure
+    results = {
+        'assignments': {},
+        'sprint_summary': {},
+        'team_member_summary': {},
+        'unassigned': []
+    }
+    
+    # Initialize sprints
+    sprints = {}
+    for i in range(1, max_sprints + 1):
+        sprint_name = f"Sprint {i}"
+        sprints[sprint_name] = {
+            'tasks': [],
+            'total_hours': 0,
+            'capacity': capacity_per_sprint,
+            'team_member_hours': {member: {'capacity': capacity, 'used': 0} for member, capacity in team_members.items()}
+        }
     """Optimize task assignment across sprints and team members"""
     # Create a copy of the DataFrame to work with
     df = tasks_df.copy()
@@ -500,7 +532,29 @@ def optimize_sprint_assignment(tasks_df, team_members, capacity_per_sprint, max_
     # Clone team members with their capacity
     available_capacity = {member: float(capacity) for member, capacity in team_members.items()}
     
-    # Try to assign tasks based on priority, estimate, and available capacity
+    # Define expertise matching function
+    def matches_expertise(member, task):
+        expertise = member.get('specialization', 'none').lower()
+        
+        # No specialization - can take any task
+        if expertise == 'none':
+            return True
+            
+        # Component specialization
+        if expertise.startswith('comp'):
+            return task['Component'] == expertise
+            
+        # Priority specialization
+        if expertise == 'high priority':
+            return task['Priority'].lower() == 'high'
+            
+        # Category specialization
+        if expertise == 'sw_p':
+            return task['Category'] == 'SW_P'
+            
+        return False
+
+    # Try to assign tasks based on expertise, priority, and capacity
     for idx, row in df.iterrows():
         task_id = row['ID']
         task_title = row['Title']
@@ -963,10 +1017,14 @@ def render_sprint_task_planner():
                 
                 new_member_name = st.text_input("Name")
                 new_member_capacity = st.number_input("Capacity (hours)", min_value=1, value=40)
+                expertise = st.selectbox("Expertise", ["None", "Comp1", "Comp2", "High Priority", "SW_P"])
                 
                 submitted = st.form_submit_button("Add Team Member")
                 if submitted and new_member_name:
-                    st.session_state.team_members[new_member_name] = new_member_capacity
+                    st.session_state.team_members[new_member_name] = {
+                        'capacity': new_member_capacity,
+                        'specialization': expertise
+                    }
                     st.success(f"Added {new_member_name} with {new_member_capacity} hours capacity")
         
         with col2:
