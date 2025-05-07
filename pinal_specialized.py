@@ -2354,6 +2354,60 @@ def render_retrospective_analysis():
                     )
                     st.plotly_chart(vote_distribution, use_container_width=True)
                     
+                    # Title Distribution Analysis
+                    st.subheader("Title Distribution")
+                    if "Title" in df.columns:
+                        # Extract common title patterns
+                        title_patterns = df["Title"].str.extract(r'(^[^:]+)')[0].value_counts()
+                        
+                        # Create pie chart for title distribution
+                        fig_title = px.pie(
+                            values=title_patterns.values,
+                            names=title_patterns.index,
+                            title="Distribution of Task Types"
+                        )
+                        st.plotly_chart(fig_title, use_container_width=True)
+                        
+                        # Show title breakdown
+                        st.markdown("#### Title Breakdown")
+                        st.dataframe(
+                            pd.DataFrame({
+                                "Title Pattern": title_patterns.index,
+                                "Count": title_patterns.values,
+                                "Percentage": (title_patterns.values / len(df) * 100).round(1)
+                            })
+                        )
+                    
+                    # Product Release Analysis
+                    st.subheader("Product Release Analysis")
+                    if "Product Release" in df.columns:
+                        release_counts = df["Product Release"].value_counts()
+                        
+                        # Create bar chart for release distribution
+                        fig_release = px.bar(
+                            x=release_counts.index,
+                            y=release_counts.values,
+                            title="Tasks by Product Release",
+                            labels={"x": "Release", "y": "Number of Tasks"}
+                        )
+                        st.plotly_chart(fig_release, use_container_width=True)
+                        
+                        # Show release statistics
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Total Releases", len(release_counts))
+                        with col2:
+                            st.metric("Avg Tasks per Release", round(release_counts.mean(), 1))
+                            
+                        # Show detailed release breakdown
+                        st.markdown("#### Release Details")
+                        release_df = pd.DataFrame({
+                            "Release": release_counts.index,
+                            "Tasks": release_counts.values,
+                            "Percentage": (release_counts / len(df) * 100).round(1)
+                        })
+                        st.dataframe(release_df)
+                    
                     # Count items with and without associated tasks
                     with_tasks = results_df["Task ID"].apply(lambda x: x != "None").sum()
                     without_tasks = len(results_df) - with_tasks
