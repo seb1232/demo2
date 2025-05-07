@@ -2131,9 +2131,11 @@ def render_sprint_task_planner():
 
         # 🧠 Analyze mismatches
         df["Assigned To"] = df["Assigned To"].fillna("").str.strip()
-        df["Mismatch"] = df.apply(Type,Description,Votes)
-        Went Well,The team was collaborative,5
-        Needs Improvement,Documentation is lacking,3
+        df["Mismatch"] = df.apply(lambda row: 
+            "Mismatch" if (row["Assigned To"] and 
+            row["Component"] and expertise_dict.get(row["Assigned To"]) and 
+            expertise_dict[row["Assigned To"]] != row["Component"]) 
+            else "Match", axis=1)
         ```
 
         The tool will also recognize associated tasks when formatted as:
