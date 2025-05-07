@@ -463,7 +463,7 @@ def update_azure_devops_tasks(org_url, project, access_token, updates):
     
     return results
 
-def optimize_sprint_assignment(tasks_df, team_members, capacity_per_sprint, max_sprints=3):
+def optimize_sprint_assignment(tasks_df, team_members, capacity_per_sprint, max_sprints=3, specialisation_field="None"):
     """Optimize task assignment across sprints and team members"""
     # Create a copy of the DataFrame to work with
     df = tasks_df.copy()
@@ -767,7 +767,7 @@ def render_home():
     st.markdown("""
     <div class="apple-card" style='background-color: rgba(130, 133, 48, 0.7); padding: 30px; border-radius: 20px; margin: 40px 0 30px 0; backdrop-filter: blur(15px); animation: fadeInUp 0.8s ease-out;'>
         <h2 style="margin-bottom: 20px; font-size: 28px; font-weight: 500;">All-in-One Tool for Agile Teams</h2>
-        <p style="margin-bottom: 20px; font-size: 18px; line-height: 1.6;">This integrated application provides comprehensive tools for managing agile projects with a beautiful, intuitive interface:</p>
+        <p style="margin-bottom: 20px; font-size: 18px; lineheight: 1.6;">This integrated application provides comprehensive tools for managing agile projects with a beautiful, intuitive interface:</p>
         <ul class="staggered-fade" style="padding-left: 20px;">
             <li style="margin-bottom: 12px; font-size: 16px;"><strong>Sprint Task Planning:</strong> Optimize task assignment across sprints and team members</li>
             <li style="margin-bottom: 12px; font-size: 16px;"><strong>Retrospective Analysis:</strong> Analyze feedback from multiple retrospectives</li>
@@ -963,14 +963,10 @@ def render_sprint_task_planner():
                 
                 new_member_name = st.text_input("Name")
                 new_member_capacity = st.number_input("Capacity (hours)", min_value=1, value=40)
-                new_member_specialisation = st.text_input("Specialisation (e.g., comp1, release1, category)", key="specialisation_input")
                 
                 submitted = st.form_submit_button("Add Team Member")
                 if submitted and new_member_name:
-                    st.session_state.team_members[new_member_name] = {
-                        "capacity": new_member_capacity,
-                        "specialisation": new_member_specialisation
-                    }
+                    st.session_state.team_members[new_member_name] = new_member_capacity
                     st.success(f"Added {new_member_name} with {new_member_capacity} hours capacity")
         
         with col2:
@@ -1006,10 +1002,10 @@ def render_sprint_task_planner():
             st.subheader("Current Team")
             
             # Create a DataFrame to display
-            team_df = pd.DataFrame([
-                {"Name": name, "Capacity (hours)": data["capacity"], "Specialisation": data.get("specialisation", "")}
-                for name, data in st.session_state.team_members.items()
-            ])
+            team_df = pd.DataFrame({
+                "Name": list(st.session_state.team_members.keys()),
+                "Capacity (hours)": list(st.session_state.team_members.values())
+            })
             
             # Display team table
             st.dataframe(team_df, use_container_width=True)
@@ -1096,7 +1092,7 @@ def render_sprint_task_planner():
             # Assignment Options
             st.subheader("Assignment Options")
             
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
             
             with col1:
                 priority_balance = st.slider(
@@ -1114,7 +1110,14 @@ def render_sprint_task_planner():
                     value=False,
                     help="When enabled, members will be assigned tasks from their specialized categories when possible"
                 )
-                
+            
+            with col3:
+                specialisation_field = st.selectbox(
+                    "Specialization Field",
+                    options=["None", "Title", "Category", "Product Release"],
+                    help="Select which field to use for specialization matching. Select 'None' to ignore specialization."
+                )
+            
             # Assignment button
             if st.button("Run Assignment", type="primary", use_container_width=True):
                 # Get the data
@@ -2102,7 +2105,7 @@ def render_sprint_task_planner():
 
 def render_retrospective_analysis():
     st.markdown("""
-    <div class="animated-header">
+    <div classanimated-header">
         <div class="floating-container"></div>
         <h1 style="color: white; font-size: 48px; margin-bottom: 15px; text-align: center;">RetroSpective Analysis Tool</h1>
         <p style="color: white; font-size: 18px; text-align: center; animation: fadeInUp 1s 0.5s forwards; opacity: 0; line-height: 1.6;">
