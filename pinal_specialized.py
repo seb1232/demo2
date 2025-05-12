@@ -892,12 +892,12 @@ def render_sprint_task_planner():
             try:
                 # Load data
                 df = file_bytes = uploaded_file.read()
-encoding, confidence = detect_encoding(file_bytes)
-sample_text = file_bytes.decode(encoding, errors='replace')
-delimiter = detect_delimiter(sample_text)
-st.write(f"Detected Encoding: **{encoding}** (Confidence: {confidence:.2f})")
-st.write(f"Detected Delimiter: **'{delimiter}'**")
-pd.read_csv(io.StringIO(sample_text), encoding=encoding, sep=delimiter)
+				encoding, confidence = detect_encoding(file_bytes)
+				sample_text = file_bytes.decode(encoding, errors='replace')
+				delimiter = detect_delimiter(sample_text)
+				st.write(f"Detected Encoding: **{encoding}** (Confidence: {confidence:.2f})")
+				st.write(f"Detected Delimiter: **'{delimiter}'**")
+				pd.read_csv(io.StringIO(sample_text), encoding=encoding, sep=delimiter)
                 
                 # Preview data
                 st.subheader("Data Preview")
