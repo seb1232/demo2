@@ -1,0 +1,230 @@
+/* Apple-inspired animations and styling */
+
+/* Animation keyframes */
+@keyframes float {
+    0% {
+        transform: translateY(0) translateX(0);
+    }
+    25% {
+        transform: translateY(-15px) translateX(15px);
+    }
+    50% {
+        transform: translateY(0) translateX(30px);
+    }
+    75% {
+        transform: translateY(15px) translateX(15px);
+    }
+    100% {
+        transform: translateY(0) translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        transform: translateY(40px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes gradientBG {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Gradient header similar to Apple's style */
+.animated-header {
+    background: linear-gradient(-45deg, #1E88E5, #4CAF50, #9C27B0, #F44336);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    padding: 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.animated-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0));
+    transform: translateY(-100%);
+    animation: shine 5s infinite;
+}
+
+@keyframes shine {
+    0% {
+        transform: translateY(-100%);
+    }
+    10% {
+        transform: translateY(100%);
+    }
+    100% {
+        transform: translateY(100%);
+    }
+}
+
+/* Apple-style cards with hover effects */
+.apple-card {
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.apple-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.apple-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    transition: left 0.7s;
+}
+
+.apple-card:hover::before {
+    left: 100%;
+}
+
+/* Staggered animation for list items */
+.staggered-fade li {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* Magnetic buttons similar to Apple's style */
+.magnetic-button {
+    background: linear-gradient(90deg, #1E88E5, #4CAF50);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.magnetic-button:hover {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.magnetic-button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0));
+    transition: left 0.7s;
+}
+
+.magnetic-button:hover::before {
+    left: 100%;
+}
+
+/* Floating container for background elements (similar to Apple's floating UI) */
+.floating-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.floating-element {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Typing effect for headings */
+.typing-effect {
+    border-right: 3px solid;
+    white-space: nowrap;
+    overflow: hidden;
+    margin: 0 auto;
+    letter-spacing: 0.1em;
+}
+
+/* Pulsing cards for important information */
+.pulse-card {
+    animation: pulse 3s infinite;
+    transition: all 0.3s ease;
+}
+
+/* Smooth scrolling for the entire page (Apple-style) */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar (Apple-style) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="250" viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient for backgrounds -->
+    <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1E88E5" />
+      <stop offset="100%" stop-color="#4CAF50" />
+    </linearGradient>
+    
+    <!-- Gradient for text -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E1F5FE" />
+      <stop offset="100%" stop-color="#E8F5E9" />
+    </linearGradient>
+    
+    <!-- Animation for sprint board -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="800" height="250" rx="10" fill="#1E2130" />
+  
+  <!-- Main title with animation -->
+  <text x="400" y="80" font-family="Arial" font-size="50" font-weight="bold" text-anchor="middle" fill="url(#textGradient)">
+    Agile Project Management
+    <animate attributeName="opacity" values="0;1" dur="1.5s" begin="0s" fill="freeze" />
+    <animate attributeName="y" values="60;80" dur="1s" begin="0s" fill="freeze" />
+  </text>
+  
+  <!-- Subtitle with delayed animation -->
+  <text x="400" y="120" font-family="Arial" font-size="24" text-anchor="middle" fill="#E0E0E0">
+    Sprint Planning + Retrospective Analysis
+    <animate attributeName="opacity" values="0;1" dur="1.5s" begin="0.5s" fill="freeze" />
+    <animate attributeName="y" values="140;120" dur="1s" begin="0.5s" fill="freeze" />
+  </text>
+  
+  <!-- Sprint board icon with animation (left side) -->
+  <g transform="translate(180, 180)">
+    <rect x="-40" y="-30" width="80" height="60" rx="5" fill="#1E88E5" filter="url(#shadow)">
+      <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1s" fill="freeze" />
+      <animate attributeName="width" values="0;80" dur="0.5s" begin="1s" fill="freeze" />
+    </rect>
+    <rect x="-30" y="-20" width="60" height="10" rx="2" fill="white" opacity="0.7">
+      <animate attributeName="opacity" values="0;0.7" dur="0.5s" begin="1.2s" fill="freeze" />
+    </rect>
+    <rect x="-30" y="-5" width="40" height="10" rx="2" fill="white" opacity="0.7">
+      <animate attributeName="opacity" values="0;0.7" dur="0.5s" begin="1.4s" fill="freeze" />
+    </rect>
+    <rect x="-30" y="10" width="50" height="10" rx="2" fill="white" opacity="0.7">
+      <animate attributeName="opacity" values="0;0.7" dur="0.5s" begin="1.6s" fill="freeze" />
+    </rect>
+  </g>
+  
+  <!-- Retrospective icon with animation (right side) -->
+  <g transform="translate(620, 180)">
+    <circle cx="0" cy="0" r="40" fill="#4CAF50" filter="url(#shadow)">
+      <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1.2s" fill="freeze" />
+      <animate attributeName="r" values="0;40" dur="0.5s" begin="1.2s" fill="freeze" />
+    </circle>
+    <path d="M-20,-10 L-5,10 L5,-5 L20,15" stroke="white" stroke-width="3" fill="none" stroke-linecap="round">
+      <animate attributeName="opacity" values="0;1" dur="0.5s" begin="1.7s" fill="freeze" />
+      <animate attributeName="stroke-dasharray" values="60;0" dur="1s" begin="1.7s" fill="freeze" />
+    </path>
+  </g>
+  
+  <!-- Animated connecting line between icons -->
+  <path d="M220,180 L580,180" stroke="url(#headerGradient)" stroke-width="3" stroke-dasharray="5,5">
+    <animate attributeName="stroke-dashoffset" values="100;0" dur="15s" repeatCount="indefinite" />
+  </path>
+  
+  <!-- Animated dots moving along the line -->
+  <circle cx="220" cy="180" r="5" fill="#1E88E5">
+    <animate attributeName="cx" values="220;580;220" dur="7s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="580" cy="180" r="5" fill="#4CAF50">
+    <animate attributeName="cx" values="580;220;580" dur="7s" repeatCount="indefinite" />
+  </circle>
+</svg>

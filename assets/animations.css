@@ -1,0 +1,107 @@
+/* Animation styles for Agile Project Management Suite */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes borderPulse {
+  0% { border-color: rgba(30, 136, 229, 0.6); }
+  50% { border-color: rgba(30, 136, 229, 1); }
+  100% { border-color: rgba(30, 136, 229, 0.6); }
+}
+
+.fade-in {
+  animation: fadeIn 1s ease forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.8s ease forwards;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.8s ease forwards;
+}
+
+.slide-in-up {
+  animation: slideInUp 0.8s ease forwards;
+}
+
+.pulse {
+  animation: pulse 2s ease infinite;
+}
+
+.border-pulse {
+  border: 2px solid rgba(30, 136, 229, 0.6);
+  animation: borderPulse 2s ease infinite;
+}
+
+/* Animations with delays */
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* Card hover effects */
+.hover-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Animated sidebar buttons */
+.sidebar-button {
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.sidebar-button:hover {
+  transform: translateX(5px);
+}
+
+/* Animated metrics */
+.animated-metric {
+  transition: transform 0.3s ease;
+}
+
+.animated-metric:hover {
+  transform: scale(1.05);
+}
