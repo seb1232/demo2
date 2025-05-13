@@ -37,7 +37,7 @@ def main():
     
     # Sidebar for project selection and indexing
     with st.sidebar:
-        st.header("Project Configuration")
+        st.header("Project Configuration(Works Only On Local System)")
         
         # Project directory selection
         st.subheader("Select Project Directory")
