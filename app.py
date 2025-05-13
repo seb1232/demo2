@@ -14,7 +14,7 @@ from utils.parser import CppParser
 
 # Set page configuration
 st.set_page_config(
-    page_title="C++ Codebase Search Tool",
+    page_title="C++ Codebase Search Tool(Works Only in Local System[Data Protection]",
     page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded"
